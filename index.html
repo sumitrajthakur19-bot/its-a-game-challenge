@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Totally Random Challenge 🎮</title>
+  <meta name="description"
+    content="A totally unnecessary, absolutely silly mini-game. Play at your own risk of smiling." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ══════════════════════════════════════════
+       TOKENS & RESET
+    ══════════════════════════════════════════ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --pink: #ff6eb4;
+      --purple: #9b5de5;
+      --yellow: #fee440;
+      --cyan: #00bbf9;
+      --green: #00f5d4;
+      --orange: #f15bb5;
+      --dark: #1a0a2e;
+      --darker: #110720;
+      --card-bg: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.15);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+      --radius: 20px;
+      --font: 'Nunito', sans-serif;
+      --font2: 'Pacifico', cursive;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--darker);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ══════════════════════════════════════════
+       ANIMATED GRADIENT BACKGROUND
+    ══════════════════════════════════════════ */
+    .bg-gradient {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 40%, #1a0a2e 70%, #2e0d2e 100%);
+      z-index: 0;
+    }
+
+    .bg-gradient::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 20% 20%, rgba(155, 93, 229, 0.25) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255, 110, 180, 0.2) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 60% 10%, rgba(0, 187, 249, 0.12) 0%, transparent 60%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgPulse {
+      from {
+        opacity: 0.6;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       FLOATING STARS
+    ══════════════════════════════════════════ */
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      animation: twinkle var(--dur, 3s) var(--delay, 0s) ease-in-out infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from {
+        opacity: 0.1;
+        transform: scale(0.8);
+      }
+
+      to {
+        opacity: 0.9;
+        transform: scale(1.2);
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       CONFETTI CANVAS
+    ══════════════════════════════════════════ */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      display: none;
+    }
+
+    /* ══════════════════════════════════════════
+       WRAPPER
+    ══════════════════════════════════════════ */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 540px;
+      min-height: 100vh;
+      padding: 20px 16px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    /* ══════════════════════════════════════════
+       SCREEN SYSTEM
+    ══════════════════════════════════════════ */
+    .screen {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      animation: screenIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes screenIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       CARD
+    ══════════════════════════════════════════ */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px 28px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* ══════════════════════════════════════════
+       PROGRESS BAR
+    ══════════════════════════════════════════ */
+    .progress-bar-wrap {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 50px;
+      background: linear-gradient(90deg, var(--pink), var(--purple));
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      width: 0%;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 6px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════════════════
+       TYPOGRAPHY
+    ══════════════════════════════════════════ */
+    .game-logo {
+      font-family: var(--font2);
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      background: linear-gradient(135deg, var(--pink), var(--purple), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .emoji-big {
+      font-size: clamp(3rem, 10vw, 5rem);
+      display: block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(-3deg);
+      }
+
+      50% {
+        transform: translateY(-12px) rotate(3deg);
+      }
+    }
+
+    h2 {
+      font-size: clamp(1.2rem, 4.5vw, 1.6rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    p {
+      font-size: clamp(0.9rem, 3vw, 1.05rem);
+      color: rgba(255, 255, 255, 0.72);
+      line-height: 1.65;
+    }
+
+    .highlight {
+      color: var(--yellow);
+      font-weight: 800;
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 50px;
+      margin-bottom: 12px;
+    }
+
+    /* ══════════════════════════════════════════
+       BUTTONS
+    ══════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font);
+      font-weight: 800;
+      font-size: clamp(1rem, 3.5vw, 1.1rem);
+      padding: 16px 36px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s, filter 0.18s;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0);
+      transition: background 0.2s;
+    }
+
+    .btn:hover::after {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink) 0%, var(--purple) 100%);
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(155, 93, 229, 0.45);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+      border: 1px solid var(--border);
+    }
+
+    .btn-yellow {
+      background: linear-gradient(135deg, var(--yellow) 0%, #ff9500 100%);
+      color: var(--dark);
+      box-shadow: 0 6px 24px rgba(254, 228, 64, 0.35);
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, var(--green) 0%, var(--cyan) 100%);
+      color: var(--dark);
+      box-shadow: 0 6px 24px rgba(0, 245, 212, 0.35);
+    }
+
+    /* ══════════════════════════════════════════
+       CHOICE BUTTONS GRID
+    ══════════════════════════════════════════ */
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .choice-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      color: #fff;
+      font-family: var(--font);
+      font-size: clamp(0.95rem, 3vw, 1.05rem);
+      font-weight: 700;
+      padding: 16px 20px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .choice-btn .choice-letter {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .choice-btn:hover {
+      border-color: var(--pink);
+      background: rgba(255, 110, 180, 0.15);
+      transform: translateX(6px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(255, 110, 180, 0.25);
+    }
+
+    .choice-btn.selected {
+      border-color: var(--yellow);
+      background: rgba(254, 228, 64, 0.15);
+      transform: scale(1.02);
+      box-shadow: 0 6px 24px rgba(254, 228, 64, 0.3);
+    }
+
+    .choice-btn.wrong {
+      border-color: rgba(255, 80, 80, 0.5);
+      background: rgba(255, 80, 80, 0.08);
+      opacity: 0.55;
+    }
+
+    /* ══════════════════════════════════════════
+       RESPONSE BOX
+    ══════════════════════════════════════════ */
+    .response-box {
+      display: none;
+      background: rgba(254, 228, 64, 0.1);
+      border: 1.5px solid rgba(254, 228, 64, 0.35);
+      border-radius: 16px;
+      padding: 20px 22px;
+      text-align: center;
+      width: 100%;
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .response-box.visible {
+      display: block;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.85);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .response-emoji {
+      font-size: 2.2rem;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .response-text {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--yellow);
+      line-height: 1.5;
+    }
+
+    .response-sub {
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.65);
+      margin-top: 6px;
+    }
+
+    /* ══════════════════════════════════════════
+       ROUND INDICATOR
+    ══════════════════════════════════════════ */
+    .round-dots {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .round-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.3s;
+    }
+
+    .round-dot.done {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .round-dot.active {
+      background: var(--yellow);
+      border-color: var(--yellow);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(254, 228, 64, 0.5);
+      }
+
+      50% {
+        transform: scale(1.2);
+        box-shadow: 0 0 0 6px rgba(254, 228, 64, 0);
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       TIMER
+    ══════════════════════════════════════════ */
+    .timer-ring {
+      position: relative;
+      width: 56px;
+      height: 56px;
+    }
+
+    .timer-ring svg {
+      transform: rotate(-90deg);
+      width: 56px;
+      height: 56px;
+    }
+
+    .timer-ring circle {
+      fill: none;
+      stroke-width: 4;
+    }
+
+    .timer-ring .track {
+      stroke: rgba(255, 255, 255, 0.1);
+    }
+
+    .timer-ring .fill {
+      stroke: var(--cyan);
+      stroke-linecap: round;
+      stroke-dasharray: 138;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1s linear;
+    }
+
+    .timer-number {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--cyan);
+    }
+
+    /* ══════════════════════════════════════════
+       FINAL / SECRET SCREENS
+    ══════════════════════════════════════════ */
+    .trophy-emoji {
+      font-size: clamp(4rem, 14vw, 6rem);
+      display: block;
+      animation: trophySpin 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, float 3s ease-in-out 0.8s infinite;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 80px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--yellow);
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .secret-card {
+      background: linear-gradient(135deg, rgba(255, 110, 180, 0.15), rgba(155, 93, 229, 0.15));
+      border: 1.5px solid rgba(255, 110, 180, 0.4);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .secret-card::before {
+      content: '✨';
+      position: absolute;
+      font-size: 8rem;
+      opacity: 0.06;
+      top: -20px;
+      right: -20px;
+    }
+
+    .secret-message {
+      font-size: clamp(1rem, 3.5vw, 1.15rem);
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.8;
+      font-weight: 600;
+    }
+
+    .secret-sign {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--pink);
+      font-weight: 700;
+    }
+
+    .hearts-row {
+      font-size: 1.5rem;
+      letter-spacing: 4px;
+      animation: heartBeat 1.2s ease-in-out infinite;
+    }
+
+    @keyframes heartBeat {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.15);
+      }
+    }
+
+    @keyframes trophySpin {
+      from {
+        transform: rotate(-20deg) scale(0.5);
+        opacity: 0;
+      }
+
+      to {
+        transform: rotate(0deg) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       SHAKE ANIMATION
+    ══════════════════════════════════════════ */
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-8px);
+      }
+
+      40% {
+        transform: translateX(8px);
+      }
+
+      60% {
+        transform: translateX(-6px);
+      }
+
+      80% {
+        transform: translateX(6px);
+      }
+    }
+
+    .shake {
+      animation: shake 0.5s ease;
+    }
+
+    /* ══════════════════════════════════════════
+       UTILITY
+    ══════════════════════════════════════════ */
+    .flex-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .gap-8 {
+      gap: 8px;
+    }
+
+    .mt-8 {
+      margin-top: 8px;
+    }
+
+    .mt-16 {
+      margin-top: 16px;
+    }
+
+    .full-w {
+      width: 100%;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE TWEAKS
+    ══════════════════════════════════════════ */
+    @media (max-width: 400px) {
+
+      .card,
+      .secret-card {
+        padding: 24px 18px;
+      }
+
+      .btn {
+        padding: 14px 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Background -->
+  <div class="bg-gradient"></div>
+  <div class="stars" id="starsContainer"></div>
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ══════ WRAPPER ══════ -->
+  <div class="wrapper">
+
+    <!-- ══════ SCREEN 0: WELCOME ══════ -->
+    <div class="screen active" id="screen-welcome">
+      <span class="emoji-big">👽</span>
+      <div class="card">
+        <div class="game-logo">The Totally Random Challenge</div>
+        <p class="mt-8"
+          style="font-size:0.8rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;">A
+          completely unnecessary test</p>
+        <p>You have been <span class="highlight">randomly selected</span> by the universe for a quiz that serves
+          absolutely no purpose whatsoever. Congratulations, I guess.</p>
+        <p class="mt-8" style="font-size:0.85rem;color:rgba(255,255,255,0.45);">⏱ Estimated time: 2 minutes (or a
+          lifetime of regret)</p>
+      </div>
+
+      <div class="card">
+        <h2>Are you ready? 🫡</h2>
+        <p class="mt-8">Warning: Side effects may include <span class="highlight">uncontrollable smiling</span>, mild
+          confusion, and a sudden urge to send this to someone you like. 👀</p>
+        <div class="flex-row mt-16 gap-8">
+          <button class="btn btn-primary full-w" id="btn-start-ready" onclick="startGame()">Obviously 😎</button>
+          <button class="btn btn-secondary full-w" id="btn-start-scared" onclick="scaredClick()">I'm scared 💀</button>
+        </div>
+        <p id="scared-msg" class="hidden mt-8"
+          style="color:var(--pink);font-size:0.85rem;font-weight:700;animation:popIn 0.4s ease;">Too bad. You're playing
+          anyway. 😈</p>
+      </div>
+    </div>
+
+    <!-- ══════ SCREEN 1: ROUND 1 ══════ -->
+    <div class="screen" id="screen-round1">
+      <!-- Header -->
+      <div class="flex-row full-w">
+        <div>
+          <div class="badge">Round 1 of 3</div>
+          <div class="round-dots">
+            <div class="round-dot active" id="dot-1"></div>
+            <div class="round-dot" id="dot-2"></div>
+            <div class="round-dot" id="dot-3"></div>
+          </div>
+        </div>
+        <div class="timer-ring" id="timer1">
+          <svg viewBox="0 0 44 44">
+            <circle class="track" cx="22" cy="22" r="22" />
+            <circle class="fill" id="timerFill1" cx="22" cy="22" r="22" />
+          </svg>
+          <div class="timer-number" id="timerNum1">15</div>
+        </div>
+      </div>
+      <div class="card">
+        <span style="font-size:2.4rem;">🧠</span>
+        <h2 class="mt-8">Choose your superpower</h2>
+        <p class="mt-8">If you could have one gift, what would it be?</p>
+      </div>
+      <div class="choices" id="choices1">
+        <button class="choice-btn" id="r1a" onclick="answer(1,'a')">
+          <span class="choice-letter">A</span>
+          <span>Reading people's minds 🧠</span>
+        </button>
+        <button class="choice-btn" id="r1b" onclick="answer(1,'b')">
+          <span class="choice-letter">B</span>
+          <span>Sleeping anywhere, anytime 😴</span>
+        </button>
+        <button class="choice-btn" id="r1c" onclick="answer(1,'c')">
+          <span class="choice-letter">C</span>
+          <span>Making food appear instantly 🍕</span>
+        </button>
+      </div>
+      <div class="response-box" id="response1">
+        <span class="response-emoji" id="r1emoji"></span>
+        <div class="response-text" id="r1text"></div>
+        <div class="response-sub" id="r1sub"></div>
+      </div>
+      <button class="btn btn-yellow full-w hidden" id="btn-next1" onclick="goToRound(2)">Next challenge →</button>
+    </div>
+
+    <!-- ══════ SCREEN 2: ROUND 2 ══════ -->
+    <div class="screen" id="screen-round2">
+      <div class="flex-row full-w">
+        <div>
+          <div class="badge">Round 2 of 3</div>
+          <div class="round-dots">
+            <div class="round-dot done" id="dot2-1"></div>
+            <div class="round-dot active" id="dot2-2"></div>
+            <div class="round-dot" id="dot2-3"></div>
+          </div>
+        </div>
+        <div class="timer-ring" id="timer2">
+          <svg viewBox="0 0 44 44">
+            <circle class="track" cx="22" cy="22" r="22" />
+            <circle class="fill" id="timerFill2" cx="22" cy="22" r="22" />
+          </svg>
+          <div class="timer-number" id="timerNum2">15</div>
+        </div>
+      </div>
+      <div class="card">
+        <span style="font-size:2.4rem;">🌮</span>
+        <h2 class="mt-8">Your vibe check</h2>
+        <p class="mt-8">It's Friday night. What are you doing?</p>
+      </div>
+      <div class="choices" id="choices2">
+        <button class="choice-btn" id="r2a" onclick="answer(2,'a')">
+          <span class="choice-letter">A</span>
+          <span>Binge watching something on a streaming platform 📺</span>
+        </button>
+        <button class="choice-btn" id="r2b" onclick="answer(2,'b')">
+          <span class="choice-letter">B</span>
+          <span>Out with friends, living my best life 🕺</span>
+        </button>
+        <button class="choice-btn" id="r2c" onclick="answer(2,'c')">
+          <span class="choice-letter">C</span>
+          <span>In bed, snacks in hand, phone in face 🛌</span>
+        </button>
+      </div>
+      <div class="response-box" id="response2">
+        <span class="response-emoji" id="r2emoji"></span>
+        <div class="response-text" id="r2text"></div>
+        <div class="response-sub" id="r2sub"></div>
+      </div>
+      <button class="btn btn-green full-w hidden" id="btn-next2" onclick="goToRound(3)">One more round →</button>
+    </div>
+
+    <!-- ══════ SCREEN 3: ROUND 3 ══════ -->
+    <div class="screen" id="screen-round3">
+      <div class="flex-row full-w">
+        <div>
+          <div class="badge">Round 3 of 3 🔥</div>
+          <div class="round-dots">
+            <div class="round-dot done" id="dot3-1"></div>
+            <div class="round-dot done" id="dot3-2"></div>
+            <div class="round-dot active" id="dot3-3"></div>
+          </div>
+        </div>
+        <div class="timer-ring" id="timer3">
+          <svg viewBox="0 0 44 44">
+            <circle class="track" cx="22" cy="22" r="22" />
+            <circle class="fill" id="timerFill3" cx="22" cy="22" r="22" />
+          </svg>
+          <div class="timer-number" id="timerNum3">15</div>
+        </div>
+      </div>
+      <div class="card">
+        <span style="font-size:2.4rem;">💌</span>
+        <h2 class="mt-8">The final boss question</h2>
+        <p class="mt-8">Someone secretly likes you. What's your immediate reaction?</p>
+      </div>
+      <div class="choices" id="choices3">
+        <button class="choice-btn" id="r3a" onclick="answer(3,'a')">
+          <span class="choice-letter">A</span>
+          <span>I knew it, obviously 😏</span>
+        </button>
+        <button class="choice-btn" id="r3b" onclick="answer(3,'b')">
+          <span class="choice-letter">B</span>
+          <span>*nervous laughing* 🫣</span>
+        </button>
+        <button class="choice-btn" id="r3c" onclick="answer(3,'c')">
+          <span class="choice-letter">C</span>
+          <span>Wait… for real?? 🥹</span>
+        </button>
+      </div>
+      <div class="response-box" id="response3">
+        <span class="response-emoji" id="r3emoji"></span>
+        <div class="response-text" id="r3text"></div>
+        <div class="response-sub" id="r3sub"></div>
+      </div>
+      <button class="btn btn-primary full-w hidden" id="btn-next3" onclick="showResults()">See your results 🎉</button>
+    </div>
+
+    <!-- ══════ SCREEN 4: RESULTS ══════ -->
+    <div class="screen" id="screen-results">
+      <span class="trophy-emoji">🏆</span>
+      <div class="card">
+        <h2>Congratulations, legend.</h2>
+        <p class="mt-8">You have successfully completed a quiz that serves <span class="highlight">absolutely no
+            academic, professional, or logical purpose</span> whatsoever. Peak productivity.</p>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-val" id="statTime">—</div>
+          <div class="stat-label">Seconds Wasted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">3/3</div>
+          <div class="stat-label">Rounds Survived</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">100%</div>
+          <div class="stat-label">Silliness Level</div>
+        </div>
+      </div>
+      <div class="card">
+        <p>Now… there's a <span class="highlight">secret message</span> waiting for you. 👀</p>
+        <p class="mt-8" style="font-size:0.85rem;color:rgba(255,255,255,0.5);">It may or may not be the most important
+          thing you read today. No pressure.</p>
+        <button class="btn btn-primary full-w mt-16" id="btn-reveal" onclick="revealSecret()">Reveal the secret
+          🔮</button>
+      </div>
+    </div>
+
+    <!-- ══════ SCREEN 5: SECRET ENDING ══════ -->
+    <div class="screen" id="screen-secret">
+      <span class="emoji-big" style="animation-duration:2s;">💌</span>
+      <div class="secret-card">
+        <div class="badge">Just for you ✨</div>
+        <div class="secret-message" id="secretMessage">
+          <!-- Message is set in JS below -->
+        </div>
+        <div class="secret-sign">— Sumit 🌙</div>
+      </div>
+      <div class="hearts-row">💗 💜 💗 💜 💗</div>
+      <div class="card">
+        <p style="font-size:0.85rem;color:rgba(255,255,255,0.55);">P.S. You didn't have to play this to the end, but you
+          did. That means something. 😊</p>
+        <div class="flex-row mt-16 gap-8">
+          <button class="btn btn-secondary full-w" onclick="resetGame()">Play again 🔄</button>
+          <button class="btn btn-primary full-w" onclick="shareGame()">Share 💌</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /wrapper -->
+
+  <script>
+    /* ══════════════════════════════════════════
+       GAME DATA
+    ══════════════════════════════════════════ */
+    const SECRET_MESSAGE = `Okay so real talk for a second Dimple —
+
+I made this little game just to make you smile. Dimple😊
+
+I know we'r\e still getting to know each other, and honestly? That's my favourite part. Every little conversation, every reply — I actually look forward to it more than you know.
+
+You're the kind of person who makes the ordinary feel a bit more interesting, and I don't know if anyone tells you that enough.
+
+So here it is, written in a silly game at the end of three ridiculous questions — I genuinely like talking to you. And I'd love to keep doing it.
+
+No pressure, no expectations. Just… this. I have been living a pretty normal life. I usually end up liking someone and it's okay if they don't feel the same. It's not like I've always gotten what I wanted. I'm used to it. 🌙`;
+
+    const ANSWERS = {
+      1: {
+        a: { emoji: '🧠', text: "Okay mind reader, SCARY.", sub: "Please don't read anyone's search history. Trust me." },
+        b: { emoji: '😴', text: "Sleeping anywhere? LEGENDARY power.", sub: "You could nap at a concert and wake up refreshed. Goals." },
+        c: { emoji: '🍕', text: "Making food appear? You're saving the world.", sub: "Gordon Ramsay could never. You win automatically." }
+      },
+      2: {
+        a: { emoji: '📺', text: "A person of culture and commitment.", sub: "You've watched an entire series in one night and felt zero shame. We respect this." },
+        b: { emoji: '🕺', text: "Look at you, actually going outside!", sub: "Scientists are baffled. The couch remains empty." },
+        c: { emoji: '🛌', text: "Bed + snacks + phone = peak existence.", sub: "Philosophers have spent centuries searching for what you already have." }
+      },
+      3: {
+        a: { emoji: '😏', text: " hamko laga tha Dimple you're very confident. Love it.", sub: "Honestly fair, some people are just built different." },
+        b: { emoji: '🫣', text: "Nervous laughing is a coping mechanism and it's VALID.", sub: "Scientists call it 'adorable panic'. Very relatable." },
+        c: { emoji: '🥹', text: "Wait… for REAL?? Yes. For real. 💜", sub: "This reaction is the most genuine thing I had never expected from you." }
+      }
+    };
+
+    /* ══════════════════════════════════════════
+       STATE
+    ══════════════════════════════════════════ */
+    let gameStartTime = null;
+    let totalSeconds = 0;
+    let timerIntervals = {};
+    let roundTimers = [null, null, null];
+    let roundSeconds = [15, 15, 15];
+    const TIMER_SECS = 15;
+    const CIRCUMFERENCE = 2 * Math.PI * 22; // r=22
+
+    /* ══════════════════════════════════════════
+       STARS
+    ══════════════════════════════════════════ */
+    (function createStars() {
+      const container = document.getElementById('starsContainer');
+      for (let i = 0; i < 60; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        const size = Math.random() * 3 + 1;
+        s.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random() * 100}%;top:${Math.random() * 100}%;
+      --dur:${(Math.random() * 3 + 2).toFixed(1)}s;
+      --delay:${(Math.random() * 3).toFixed(1)}s;
+    `;
+        container.appendChild(s);
+      }
+    })();
+
+    /* ══════════════════════════════════════════
+       SCREEN NAVIGATION
+    ══════════════════════════════════════════ */
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ══════════════════════════════════════════
+       WELCOME
+    ══════════════════════════════════════════ */
+    function scaredClick() {
+      const msg = document.getElementById('scared-msg');
+      msg.classList.remove('hidden');
+      const btn = document.getElementById('btn-start-scared');
+      btn.classList.add('shake');
+      setTimeout(() => btn.classList.remove('shake'), 500);
+      setTimeout(() => startGame(), 1600);
+    }
+
+    function startGame() {
+      gameStartTime = Date.now();
+      showScreen('screen-round1');
+      startTimer(1);
+    }
+
+    /* ══════════════════════════════════════════
+       TIMER
+    ══════════════════════════════════════════ */
+    function startTimer(round) {
+      const fillEl = document.getElementById(`timerFill${round}`);
+      const numEl = document.getElementById(`timerNum${round}`);
+      let remaining = TIMER_SECS;
+
+      fillEl.style.strokeDasharray = CIRCUMFERENCE;
+      fillEl.style.strokeDashoffset = 0;
+
+      roundTimers[round - 1] = setInterval(() => {
+        remaining--;
+        numEl.textContent = remaining;
+        fillEl.style.strokeDashoffset = CIRCUMFERENCE * (1 - remaining / TIMER_SECS);
+
+        if (remaining <= 5) {
+          fillEl.style.stroke = 'var(--pink)';
+          numEl.style.color = 'var(--pink)';
+        }
+        if (remaining <= 0) {
+          clearInterval(roundTimers[round - 1]);
+          autoAnswer(round);
+        }
+      }, 1000);
+    }
+
+    function stopTimer(round) {
+      clearInterval(roundTimers[round - 1]);
+    }
+
+    function autoAnswer(round) {
+      const opts = ['a', 'b', 'c'];
+      const pick = opts[Math.floor(Math.random() * opts.length)];
+      answer(round, pick, true);
+    }
+
+    /* ══════════════════════════════════════════
+       ANSWERING
+    ══════════════════════════════════════════ */
+    function answer(round, choice, isAuto = false) {
+      stopTimer(round);
+
+      // Disable all buttons in this round
+      const btns = document.getElementById(`choices${round}`).querySelectorAll('.choice-btn');
+      btns.forEach(b => {
+        b.style.pointerEvents = 'none';
+        b.classList.add('wrong');
+      });
+
+      // Highlight selected
+      const selBtn = document.getElementById(`r${round}${choice}`);
+      selBtn.classList.remove('wrong');
+      selBtn.classList.add('selected');
+
+      // Show response
+      const data = ANSWERS[round][choice];
+      document.getElementById(`r${round}emoji`).textContent = data.emoji;
+      document.getElementById(`r${round}text`).textContent = data.text;
+      document.getElementById(`r${round}sub`).textContent = data.sub;
+      const rb = document.getElementById(`response${round}`);
+      rb.classList.add('visible');
+
+      // Show next button
+      setTimeout(() => {
+        const nb = document.getElementById(`btn-next${round}`);
+        if (nb) nb.classList.remove('hidden');
+      }, 600);
+
+      // Update total time
+      totalSeconds = Math.round((Date.now() - gameStartTime) / 1000);
+    }
+
+    /* ══════════════════════════════════════════
+       ROUND TRANSITIONS
+    ══════════════════════════════════════════ */
+    function goToRound(round) {
+      showScreen(`screen-round${round}`);
+      startTimer(round);
+    }
+
+    function showResults() {
+      totalSeconds = Math.round((Date.now() - gameStartTime) / 1000);
+      document.getElementById('statTime').textContent = totalSeconds;
+      showScreen('screen-results');
+      launchConfetti();
+    }
+
+    function revealSecret() {
+      document.getElementById('secretMessage').innerText = SECRET_MESSAGE;
+      showScreen('screen-secret');
+      launchConfetti(true);
+    }
+
+    /* ══════════════════════════════════════════
+       RESET
+    ══════════════════════════════════════════ */
+    function resetGame() {
+      roundTimers.forEach(t => clearInterval(t));
+      roundTimers = [null, null, null];
+
+      // Reset timers visual
+      for (let r = 1; r <= 3; r++) {
+        const fill = document.getElementById(`timerFill${r}`);
+        const num = document.getElementById(`timerNum${r}`);
+        if (fill) { fill.style.strokeDashoffset = 0; fill.style.stroke = 'var(--cyan)'; }
+        if (num) { num.textContent = TIMER_SECS; num.style.color = 'var(--cyan)'; }
+      }
+
+      // Reset choice buttons
+      for (let r = 1; r <= 3; r++) {
+        const btns = document.querySelectorAll(`#choices${r} .choice-btn`);
+        btns.forEach(b => {
+          b.style.pointerEvents = '';
+          b.classList.remove('selected', 'wrong');
+        });
+        const rb = document.getElementById(`response${r}`);
+        if (rb) rb.classList.remove('visible');
+        const nb = document.getElementById(`btn-next${r}`);
+        if (nb) nb.classList.add('hidden');
+      }
+
+      document.getElementById('scared-msg').classList.add('hidden');
+      gameStartTime = null;
+      showScreen('screen-welcome');
+    }
+
+    /* ══════════════════════════════════════════
+       SHARE
+    ══════════════════════════════════════════ */
+    function shareGame() {
+      const text = "I just played The Totally Random Challenge 🎮 and there was a secret message at the end... you should try it too 👀";
+      if (navigator.share) {
+        navigator.share({ title: 'The Totally Random Challenge', text, url: window.location.href })
+          .catch(() => copyToClipboard(text));
+      } else {
+        copyToClipboard(text);
+      }
+    }
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text + '\n' + window.location.href)
+        .then(() => alert('Copied to clipboard! 📋'))
+        .catch(() => { });
+    }
+
+    /* ══════════════════════════════════════════
+       CONFETTI
+    ══════════════════════════════════════════ */
+    function launchConfetti(hearts = false) {
+      const canvas = document.getElementById('confettiCanvas');
+      canvas.style.display = 'block';
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const COLORS = ['#ff6eb4', '#9b5de5', '#fee440', '#00bbf9', '#00f5d4', '#f15bb5', '#ffffff'];
+      const HEART_CHARS = ['💗', '💜', '✨', '🌸', '⭐'];
+
+      const pieces = Array.from({ length: hearts ? 60 : 120 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        size: Math.random() * 14 + 6,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        char: hearts ? HEART_CHARS[Math.floor(Math.random() * HEART_CHARS.length)] : null,
+        speedY: Math.random() * 3 + 1.5,
+        speedX: (Math.random() - 0.5) * 2,
+        rotation: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 4,
+        shape: ['rect', 'circle', 'triangle'][Math.floor(Math.random() * 3)]
+      }));
+
+      let frame = 0;
+      const MAX_FRAMES = 220;
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation * Math.PI / 180);
+          ctx.globalAlpha = Math.max(0, 1 - frame / MAX_FRAMES + 0.2);
+
+          if (p.char) {
+            ctx.font = `${p.size * 1.8}px serif`;
+            ctx.fillText(p.char, -p.size / 2, p.size / 2);
+          } else {
+            ctx.fillStyle = p.color;
+            if (p.shape === 'rect') {
+              ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+            } else if (p.shape === 'circle') {
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size / 3, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              ctx.beginPath();
+              ctx.moveTo(0, -p.size / 2);
+              ctx.lineTo(p.size / 2, p.size / 2);
+              ctx.lineTo(-p.size / 2, p.size / 2);
+              ctx.closePath();
+              ctx.fill();
+            }
+          }
+          ctx.restore();
+
+          p.y += p.speedY;
+          p.x += p.speedX;
+          p.rotation += p.rotSpeed;
+        });
+
+        frame++;
+        if (frame < MAX_FRAMES) {
+          requestAnimationFrame(draw);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          canvas.style.display = 'none';
+        }
+      }
+      draw();
+    }
+
+    // Resize confetti canvas
+    window.addEventListener('resize', () => {
+      const c = document.getElementById('confettiCanvas');
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+    });
+  </script>
+</body>
+
+</html>
